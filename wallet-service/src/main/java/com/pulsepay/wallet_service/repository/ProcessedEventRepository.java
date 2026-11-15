@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent, UUID> {
     @Modifying
     @Query(value = """
-           INSERT INTO processed_events (
+           INSERT INTO wallet.processed_events (
                             id,
                        event_id,
                       event_type,
