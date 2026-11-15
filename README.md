@@ -1201,11 +1201,11 @@ This provides stable internal service networking and routes traffic to matching 
 ```mermaid
 flowchart TB
     Client["Internal Client"]
-    Service["Wallet Service<br/>ClusterIP :8080"]
+    Service["Wallet Service - ClusterIP :8080"]
 
     subgraph Deployment["Wallet Deployment"]
-        Pod1["Wallet Pod 1<br/>Container :8082"]
-        Pod2["Wallet Pod 2<br/>Container :8082"]
+        Pod1["Wallet Pod 1 - Container :8082"]
+        Pod2["Wallet Pod 2 - Container :8082"]
     end
 
     Client --> Service
@@ -1213,13 +1213,13 @@ flowchart TB
     Service --> Pod2
 ```
 
-The Service provides a stable network endpoint even when individual Pods are replaced.
+The Service provides a stable internal network endpoint even when individual Pods are replaced.
 
 The Service port is the port exposed by the Kubernetes Service. The target port is the port on which the application container receives traffic.
 
 ## Application health endpoints
 
-The Wallet Service exposes Spring Boot Actuator health endpoints used during application health checks:
+The Wallet Service exposes Spring Boot Actuator health endpoints that can be used for application health checks:
 
 ```text
 /actuator/health
@@ -1227,7 +1227,7 @@ The Wallet Service exposes Spring Boot Actuator health endpoints used during app
 /actuator/health/readiness
 ```
 
-The Kubernetes probe configuration should be verified in the current deployment manifest before claiming that startup, liveness, and readiness probes are all configured.
+The Kubernetes deployment manifest should be checked to confirm which startup, liveness, and readiness probes are configured. These probes help Kubernetes determine whether the application has started, is running correctly, and is ready to receive traffic.
 
 ### What the probes mean
 
