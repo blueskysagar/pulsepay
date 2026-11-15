@@ -17,6 +17,11 @@ jobs:
     name: Build and Verify Pulsepay
     runs-on: ubuntu-latest
 
+    env:
+      PULSEPAY_JWT_PRIVATE_KEY: ${{ secrets.PULSEPAY_JWT_PRIVATE_KEY }}
+      PULSEPAY_JWT_PUBLIC_KEY: ${{ secrets.PULSEPAY_JWT_PUBLIC_KEY }}
+      PULSEPAY_JWT_ISSUER: pulsepay_identity_service
+
     steps:
       # Step 1: Download our repository source code onto the runner.
       - name: Checkout source code
