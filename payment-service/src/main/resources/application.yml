@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: payment-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/pulsepay}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      open-in-view: false
+
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8082}
+
+management:   # when we open localhost:8082/actuator/health spring boots checks the system including postgresql connection and replies with up.
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+
+pulsepay: #This is saying paymentservice wallet service is available at this url.
+  wallet-service:
+    base-url: ${PULSEPAY_WALLET_SERVICE_URl:http://localhost:8081}
+
+
+
+
+  payment:
+    recovery:
+      interval-ms: 30000 # run recovery check for every 30s.
+      stale-afer-seconds: 60
+
+  security:
+    jwt:
+      public-key: ${PULSEPAY_JWT_PUBLIC_KEY}
+      issuer: pulsepay_identity_service
+
+      internal:
+        service-token: ${PULSEPAY_INTERNAL_SERVICE_TOKEN:}

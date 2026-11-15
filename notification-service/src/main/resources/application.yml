@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  jpa:
+    open-in-view: false # We want persistence context to be not be open for entire HTTP request because it will cause N+1 query performance bug and second it will run out of database connections because the connections will be locked open for entire HTTP cycle.
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    repair-on-migrate: true;
+
+  kafka:
+    bootstrap-servers:
+      -${KAFKA_BOOTSTRAP_SERVERS:kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest #kafka tracks where notification service finished reading line 500, what to do when there is no save then start reading from beginning of the topic
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    listener: # when should i mannually tell kafka that a message is done. #spring tells kafka for example record #50 is successfully processed and move on to next message.
+      ack-mode: record
+
+  server:
+    port: ${SERVER_PORT:8083}
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+    endpoint:
+      health:
+        probes:
+          enabled: true
+
+  pulsepay:
+    kafka:
+      topics:
+        transfer-completed: pulsepay.transfer.completed
+
+    security:
+      jwt:
+        public-key: ${JWT_PUBLIC_KEY:}
+        issuer: ${JWT_ISSUER:pulsepay_identity_service}

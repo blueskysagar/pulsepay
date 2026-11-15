@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: identity-service  # This is our spring boot application
+
+  datasource:    # We need datasource(connections) in order to connect my spring boot with postgresql
+    url: ${SPRING_DATASOURCE_URL:}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  jpa:
+    open-in-view: false #Don't keep the JPA persistence context open through the web request.
+    hibernate:
+      ddl-auto: validate # so that hibernate just map java object with data base, does not create, insert and do anything if it doesnt found something it throws an exception
+
+
+  flyway:
+    enabled: true # as the applications stars flyway checks and applies any pending database migrations.
+
+pulsepay:
+  security:
+    jwt:
+      private-key: ${PULSEPAY_JWT_PRIVATE_KEY}
+      public-key: ${PULSEPAY_JWT_PUBLIC_KEY}
+      issuer: ${PULSEPAY_JWT_ISSUER:pulsepay_identity_service}
+      access-token-ttl-seconds: ${PULSEPAY_JWT_ACCESS_TOKEN_TTL_SECONDS:600}
+    refresh-token:
+      ttl: 30d

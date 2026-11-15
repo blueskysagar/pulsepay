@@ -1,0 +1,142 @@
+spring:
+# ============================================================
+# APPLICATION
+# ============================================================
+  application:
+    name: wallet-service
+
+    # ============================================================
+    # DATABASE
+    # ============================================================
+  datasource:
+  # PostgreSQL connection is supplied through environment variables.
+  #
+  # We deliberately do NOT hard-code credentials in source control.
+    url: ${SPRING_DATASOURCE_URL:}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+    # ============================================================
+    # JPA / HIBERNATE
+    # ============================================================
+  jpa:
+
+    # Do not keep the Hibernate persistence context open for the
+    # entire HTTP request.
+    #
+    # This makes database access boundaries explicit.
+     open-in-view: false
+     hibernate:
+    # Hibernate validates that the Java entity model matches
+    # the existing database schema.
+    #
+    # Hibernate is NOT allowed to create or modify our schema.
+    # Flyway owns schema evolution.
+      ddl-auto: validate
+     properties:
+       hibernate:
+         default_schema: wallet
+       # ============================================================
+     # FLYWAY
+     # ============================================================
+  flyway:
+  # ============================================================
+  # FLYWAY
+  # ============================================================
+    enabled: true
+    repair-on-migrate: true
+    default-schema: wallet
+    # ============================================================
+    # REDIS
+    # ============================================================
+  data:
+    redis:
+    # Redis connection configuration.
+    #
+    # These values will normally come from Docker Compose
+    # locally and Kubernetes configuration later.
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port:  ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+        # ============================================================
+      # KAFKA
+      # ============================================================
+  kafka:
+
+    # Kafka broker address.
+    #
+    # The default is suitable for our local Docker environment.
+    bootstrap-servers:
+      - kafka-broker-1:19092
+      - kafka-broker-2:19092
+      - kafka-broker-3:19092
+    producer:
+      acks: all # It means do not give me a success response until leader broker and single currently caught up replica(ISA) have written their message to the log.
+
+      # Kafka serializes our event payloads into bytes.
+      enable-idempotence: true # otherwise retry could create a duplicate record.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      # Consumer groups allow multiple instances of Wallet Service
+      # to share the processing workload.
+      group-id: wallet-service
+      # If no committed offset exists, start from the earliest
+      # available event.
+      auto-offset-reset: earliest
+
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+pulsepay:
+  kafka:
+    topics:
+      transfer-completed: pulsepay.transfer.completed
+
+  outbox:
+    scheduler:
+      enabled: false
+
+    recovery:
+      stale-afer: 5m
+      interval: 1m #How frequently should recovery check?
+
+  wallet:
+    enabled: true
+
+  security:
+      jwt:
+        public-key: ${JWT_PUBLIC_KEY:}
+        issuer: ${JWT_ISSUER:pulsepay-identity-service}
+
+      internal:
+        service-token:  ${PULSEPAY_INTERNAL_SERVICE_TOKEN:}
+
+
+
+
+server:
+    # Identity Service and Wallet Service cannot listen on the
+    # same host port during local development.
+      port: ${SERVER_PORT:8082}
+
+      # ==============================================================
+      # ACTUATOR
+      # ==============================================================
+management:
+      endpoints:
+        web:
+          exposure:
+          # We expose health initially.
+          #
+          # We will expand observability deliberately later rather
+          # than exposing every actuator endpoint by default.
+            include: health,info
+      endpoint:
+        health:
+          probes:
+          # Enables readiness/liveness style health information.
+            enabled: true
+
+          # ==============================================================
+          # WALLET-SPECIFIC CONFIGURATION
+          # ==============================================================
