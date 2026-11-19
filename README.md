@@ -1639,6 +1639,10 @@ The objective is to demonstrate not only the ability to build REST APIs, but als
 The project is intended to reflect the technical breadth and engineering reasoning expected in modern mid-level Java backend development. It is a portfolio demonstration, not a claim of equivalent professional industry experience.
 
 ---
+## Deployment
+
+Wallet deployment is automatically triggered after successful CI verification
+and Docker image publishing to GitHub Container Registry (GHCR).
 
 ## Author
 
