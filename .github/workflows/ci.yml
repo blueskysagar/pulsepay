@@ -95,6 +95,47 @@ jobs:
             cache-from: type=gha
             cache-to: type=gha,mode=max
 
+             # JOB 3: Ask the private deployment repository to deploy the new Wallet image.
+  trigger-wallet-deployment:
+    name: Trigger Wallet Deployment
+    runs-on: ubuntu-latest
+
+    needs: build-and-publish
+
+    # Only deploy after a push to the main branch.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Generate immutable image tag
+        id: image
+        shell: bash
+        run: |
+          IMAGE_TAG="sha-${GITHUB_SHA:0:7}"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deployment image tag: ${IMAGE_TAG}"
+
+      - name: Trigger private deployment workflow
+        env:
+          DEPLOYER_TOKEN: ${{ secrets.DEPLOYER_TOKEN }}
+          IMAGE_TAG: ${{ steps.image.outputs.image_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --url "https://api.github.com/repos/blueskysagar/pulsepay-deployer/actions/workflows/deploy-wallet.yml/dispatches" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${DEPLOYER_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --header "Content-Type: application/json" \
+            --data "{\"ref\":\"main\",\"inputs\":{\"image_tag\":\"${IMAGE_TAG}\"}}"
+
+          echo "Wallet deployment workflow successfully dispatched."
+
 
 
 
